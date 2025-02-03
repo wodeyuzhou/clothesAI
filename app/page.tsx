@@ -17,20 +17,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("전체"); // ✅ 선택된 카테고리 상태 추가
   const [isSearching, setIsSearching] = useState(false);
   const [recommendations, setRecommendations] = useState<string[] | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const loadingText = "어울리는 옷을 찾는 중입니다...";
-
-
-  // 이미지 업로드 핸들러
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-
 
   // 추천 코디 생성 함수
   const generateRecommendations = () => {
