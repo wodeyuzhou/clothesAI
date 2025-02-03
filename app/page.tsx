@@ -17,13 +17,28 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("전체"); // ✅ 선택된 카테고리 상태 추가
   const [isSearching, setIsSearching] = useState(false);
   const [recommendations, setRecommendations] = useState<string[] | null>(null);
+  const [expanded, setExpanded] = useState(false); // ✅ 박스 확장 여부
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const loadingText = "어울리는 옷을 찾는 중입니다...";
+
+
+  // 이미지 업로드 핸들러
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   // 추천 코디 생성 함수
   const generateRecommendations = () => {
     setIsSearching(true); // "찾는 중..." 상태로 변경
     setTimeout(() => {
       setIsSearching(false);
+      setExpanded(false); // ✅ 전송 시 확장 상태 초기화
       setRecommendations([
         "/recommendation1.jpg",
         "/recommendation2.jpg",
@@ -183,109 +198,114 @@ export default function Home() {
           </button>
         </footer>
         
-        {/* ✅ 프롬프트 입력 UI (이미지 업로드 추가 & 추천된 옷 표시) ✅ */}
-      <div
-        className={`fixed bottom-[50px] left-1/2 transform -translate-x-1/2 w-full max-w-[380px] mx-auto bg-white shadow-lg rounded-xl p-2 flex flex-col items-center space-y-2 border border-gray-300 transition-all duration-300 ${
-          recommendations && !isSearching ? "cursor-pointer" : ""
-        }`}
-        onClick={() => {
-          if (recommendations && !isSearching) {
-            document.getElementById("recommendations-popup")?.classList.remove("hidden");
-          }
-        }}
-      >
-        {isSearching ? (
-          // ✅ 왼쪽부터 차례로 깜박이는 애니메이션 적용
-          <p className="flex-1 text-center text-sm font-bold text-gray-600 tracking-wide">
-            {loadingText.split("").map((char, index) => (
-              <span key={index} className="loading-text" style={{ animationDelay: `${index * 0.05}s` }}>
-                {char}
-              </span>
-            ))}
-          </p>
-        ) : recommendations ? (
-          // ✅ 반짝이는 효과 적용
-          <p className="text-center text-sm font-bold text-blue-500 cursor-pointer shimmer-effect">
-            추천된 옷을 확인하세요!
-          </p>
-        ) : (
-          <div className="w-full flex items-center space-x-2">
-            <input
-              type="text"
-              placeholder="여행갈 때 입을 옷을 추천해줘"
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-1 text-sm outline-none"
-            />
-            {/* 이미지 업로드 버튼 */}
-            <label className="cursor-pointer bg-gray-200 px-3 py-1 rounded-lg">
-              📷
-              <input type="file" accept="image/*" className="hidden" />
-            </label>
-            {/* 전송 버튼 */}
-            <button
-              className="bg-blue-500 text-white px-4 py-1 rounded-lg"
-              onClick={generateRecommendations}
-            >
-              전송
-            </button>
-          </div>
-        )}
-      </div>
+        {/* ✅ 프롬프트 입력 UI (확장 가능) ✅ */}
+        <div
+          className={`fixed bottom-[50px] left-1/2 transform -translate-x-1/2 w-full max-w-[420px] mx-auto bg-white shadow-lg rounded-xl p-2 flex flex-col items-center space-y-4 border border-gray-300 transition-all duration-700 ease-in-out overflow-hidden ${
+            expanded ? "max-h-[450px]" : "max-h-[80px]"
+          }`}
+        >
+          {isSearching ? (
+            // ✅ 왼쪽부터 차례로 깜박이는 애니메이션 적용
+            <p className="flex-1 text-center text-sm font-bold text-gray-600 tracking-wide">
+              {loadingText.split("").map((char, index) => (
+                <span key={index} className="loading-text" style={{ animationDelay: `${index * 0.05}s` }}>
+                  {char}
+                </span>
+              ))}
+            </p>
+          ) : recommendations ? (
+            !expanded ? (
+              // ✅ 확장되지 않았을 때: 클릭을 유도하는 텍스트
+              <p
+                className="text-center text-sm font-bold text-blue-500 cursor-pointer shimmer-effect"
+                onClick={() => setExpanded(true)}
+              >
+                추천된 옷을 확인하세요!
+              </p>
+            ) : (
+              // ✅ 확장된 상태에서 추천된 옷 리스트 표시 (부드러운 슬라이딩 효과 포함)
+              <div className="w-full flex flex-col items-center transition-all duration-300 ease-in-out">
+                <h2 className="text-lg font-bold text-center mb-2">추천된 코디</h2>
+                {/* ✅ 추천된 옷 3개를 `main`의 제품 이미지 비율과 동일하게 표시 ✅ */}
+                <div className="grid grid-cols-3 gap-2 w-full">
+                  {recommendations.map((img, index) => (
+                    <div key={index} className="relative w-full h-40 bg-gray-200 rounded-lg overflow-hidden">
+                      <Image src={img} alt={`추천 코디 ${index + 1}`} layout="fill" objectFit="cover" />
+                    </div>
+                  ))}
+                </div>
 
-      {/* ✅ 추천 코디 결과 (클릭하면 전체 화면으로 확장) ✅ */}
-      <div
-        id="recommendations-popup"
-        className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden"
-      >
-        <div className="bg-white p-6 rounded-xl text-center w-[90%] max-w-[400px]">
-          <h2 className="text-lg font-bold mb-3">추천된 코디</h2>
-          <div className="grid grid-cols-3 gap-2">
-            {recommendations?.map((img, index) => (
-              <div key={index} className="relative w-full h-32 bg-gray-200 rounded-lg overflow-hidden">
-                <Image src={img} alt={`추천 코디 ${index + 1}`} layout="fill" objectFit="cover" />
+                {/* 닫기 버튼 */}
+                <button
+                  className="mt-4 bg-gray-200 text-gray px-4 py-2 rounded-lg w-full"
+                  onClick={() => setExpanded(false)}
+                >
+                  닫기
+                </button>
               </div>
-            ))}
-          </div>
-          <button
-            className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
-            onClick={() => document.getElementById("recommendations-popup")?.classList.add("hidden")}
-          >
-            닫기
-          </button>
+            )
+          ) : (
+            <div className="w-full flex flex-col items-center space-y-2">
+              {/* 이미지 업로드 미리보기 */}
+              {imagePreview && (
+                <div className="relative w-32 h-32 bg-gray-200 rounded-lg overflow-hidden">
+                  <Image src={imagePreview} alt="업로드된 이미지" layout="fill" objectFit="cover" />
+                  <button
+                    className="absolute top-1 right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-lg"
+                    onClick={() => setImagePreview(null)}
+                  >
+                    삭제
+                  </button>
+                </div>
+              )}
+
+              <div className="w-full flex items-center space-x-2">
+                <input
+                  type="text"
+                  placeholder="여행갈 때 입을 옷을 추천해줘"
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-1 text-sm outline-none"
+                />
+                {/* 이미지 업로드 버튼 */}
+                <label className="cursor-pointer bg-gray-200 px-3 py-1 rounded-lg">
+                  📷
+                  <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                </label>
+                {/* 전송 버튼 */}
+                <button
+                  className="bg-blue-500 text-white px-4 py-1 rounded-lg"
+                  onClick={generateRecommendations}
+                >
+                  전송
+                </button>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* ✅ CSS 애니메이션 효과 ✅ */}
+        <style jsx>{`
+          .loading-text {
+            opacity: 0;
+            animation: blink 1.5s infinite ease-in-out;
+          }
+
+          @keyframes blink {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+          }
+
+          .shimmer-effect {
+            animation: shimmer 1.5s infinite alternate;
+          }
+
+          @keyframes shimmer {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+          }
+        `}</style>
       </div>
-
-      {/* ✅ CSS 애니메이션 효과 */}
-      <style jsx>{`
-        /* 개별 글자가 순서대로 깜박이는 효과 */
-        .loading-text {
-          opacity: 0;
-          animation: blink 1.5s infinite ease-in-out;
-        }
-
-        @keyframes blink {
-          0% { opacity: 0; }
-          50% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-
-        /* 반짝이는 효과 */
-        .shimmer-effect {
-          animation: shimmer 1.5s infinite alternate;
-        }
-
-        @keyframes shimmer {
-          0% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.6;
-          }
-          100% {
-            opacity: 1;
-          }
-        }
-      `}</style>
     </div>
-  </div>
-)
+  );
 }
