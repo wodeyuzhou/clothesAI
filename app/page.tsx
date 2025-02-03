@@ -18,9 +18,10 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("전체"); // 선택된 카테고리 상태
   const [isSearching, setIsSearching] = useState(false);
   const [recommendations, setRecommendations] = useState<string[] | null>(null);
-  const [expanded, setExpanded] = useState(false); // 박스 확장 여부
+  const [expanded, setExpanded] = useState(false); // 프롬프트 박스 확장 여부
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [cartCount, setCartCount] = useState(0); // 장바구니 개수
+  const [currentSlide, setCurrentSlide] = useState(0); // 추천 슬라이드 인덱스
 
   // flyingItem 상태: 애니메이션을 위해 임시로 렌더링되는 이미지의 src와 스타일 정보
   const [flyingItem, setFlyingItem] = useState<{
@@ -53,6 +54,7 @@ export default function Home() {
         "/recommendation2.jpg",
         "/recommendation3.jpg",
       ]);
+      setCurrentSlide(0);
     }, 7000);
   };
 
@@ -81,10 +83,25 @@ export default function Home() {
     );
   }, []);
 
-  // 추천 코디 이미지 클릭 시 호출되는 핸들러
+  // 좌우 슬라이드 전환 함수
+  const nextSlide = () => {
+    if (recommendations) {
+      setCurrentSlide((prev) => (prev + 1) % recommendations.length);
+    }
+  };
+
+  const prevSlide = () => {
+    if (recommendations) {
+      setCurrentSlide((prev) =>
+        (prev - 1 + recommendations.length) % recommendations.length
+      );
+    }
+  };
+
+  // 추천 코디 이미지 클릭 시 호출되는 핸들러 (타입: HTMLDivElement)
   const handleRecommendationClick = (
     imgSrc: string,
-    e: React.MouseEvent<HTMLImageElement>
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>
   ) => {
     // 뷰포트 좌표 + 스크롤 오프셋으로 문서 내 좌표 계산
     const rect = e.currentTarget.getBoundingClientRect();
@@ -320,9 +337,10 @@ export default function Home() {
             </button>
           </footer>
 
+          {/* 프롬프트 입력 UI */}
           <div
             className={`fixed bottom-[50px] left-1/2 transform -translate-x-1/2 w-full max-w-[420px] mx-auto bg-white shadow-lg rounded-xl p-4 flex flex-col items-center space-y-4 border border-gray-300 transition-all duration-700 ease-in-out overflow-hidden ${
-              expanded ? "max-h-[450px]" : "max-h-[80px]"
+              expanded ? "max-h-[800px]" : "max-h-[80px]"
             }`}
           >
             {isSearching ? (
@@ -350,21 +368,46 @@ export default function Home() {
                   <h2 className="text-lg font-bold text-center mb-2">
                     추천된 코디
                   </h2>
-                  <div className="grid grid-cols-3 gap-2 w-full">
+                  {/* 전체 화면에 가까운 슬라이드 영역 (슬라이드 효과 적용) */}
+                  <div className="relative w-full overflow-hidden" style={{ height: "62vh" }}>
                     {recommendations.map((img, index) => (
                       <div
                         key={index}
-                        className="relative w-full h-40 bg-gray-200 rounded-lg overflow-hidden cursor-pointer"
+                        className={`absolute inset-0 transition-transform duration-500 ${
+                          index === currentSlide ? "translate-x-0" : index < currentSlide ? "-translate-x-full" : "translate-x-full"
+                        }`}
                       >
-                        <Image
-                          src={img}
-                          alt={`추천 코디 ${index + 1}`}
-                          layout="fill"
-                          objectFit="cover"
+                        <div
+                          className="relative w-full h-full bg-gray-200 rounded-lg overflow-hidden cursor-pointer"
                           onClick={(e) => handleRecommendationClick(img, e)}
-                        />
+                        >
+                          <Image
+                            src={img}
+                            alt={`추천 코디 ${index + 1}`}
+                            layout="fill"
+                            objectFit="cover"
+                          />
+                        </div>
                       </div>
                     ))}
+                  </div>
+                  <p className="mt-2 text-center text-sm text-gray-700">
+                    추천 코디 {currentSlide + 1}에 대한 간략한 설명
+                  </p>
+                  {/* 슬라이드 전환 버튼 */}
+                  <div className="mt-4 flex justify-between w-full px-6">
+                    <button
+                      className="bg-gray-200 text-black px-4 py-2 rounded"
+                      onClick={prevSlide}
+                    >
+                      이전
+                    </button>
+                    <button
+                      className="bg-gray-200 text-black px-4 py-2 rounded"
+                      onClick={nextSlide}
+                    >
+                      다음
+                    </button>
                   </div>
                   <button
                     className="mt-4 bg-gray-200 text-black px-4 py-1 rounded-lg w-250"
@@ -406,7 +449,6 @@ export default function Home() {
               opacity: 0;
               animation: blink 1.5s infinite ease-in-out;
             }
-
             @keyframes blink {
               0% {
                 opacity: 0;
@@ -418,11 +460,9 @@ export default function Home() {
                 opacity: 0;
               }
             }
-
             .shimmer-effect {
               animation: shimmer 1.5s infinite alternate;
             }
-
             @keyframes shimmer {
               0% {
                 opacity: 1;
