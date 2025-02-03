@@ -52,7 +52,7 @@ export default function Home() {
         "/recommendation2.jpg",
         "/recommendation3.jpg",
       ]); // 가상의 추천 코디 이미지
-    }, 5000);
+    }, 7000);
   };
 
   // 상품 데이터 (기본값)
@@ -368,49 +368,29 @@ export default function Home() {
               </div>
             )
           ) : (
-            <div className="w-full flex flex-col items-center space-y-2">
-              {/* 이미지 업로드 미리보기 */}
-              {imagePreview && (
-                <div className="relative w-32 h-32 bg-gray-200 rounded-lg overflow-hidden">
-                  <Image
-                    src={imagePreview}
-                    alt="업로드된 이미지"
-                    layout="fill"
-                    objectFit="cover"
-                  />
-                  <button
-                    className="absolute top-1 right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-lg"
-                    onClick={() => setImagePreview(null)}
-                  >
-                    삭제
-                  </button>
-                </div>
-              )}
-
-              <div className="w-full flex items-center space-x-2">
+            <div className="w-full flex items-center space-x-2">
+              <input
+                type="text"
+                placeholder="여행갈 때 입을 옷을 추천해줘"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-1 text-sm outline-none"
+              />
+              {/* 이미지 업로드 버튼: 이미지가 첨부되면 카메라 아이콘(📷) 대신 체크 표시(✅)로 변경 */}
+              <label className="cursor-pointer bg-gray-200 px-3 py-1 rounded-lg">
+                {imagePreview ? "✅" : "📷"}
                 <input
-                  type="text"
-                  placeholder="여행갈 때 입을 옷을 추천해줘"
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-1 text-sm outline-none"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
                 />
-                {/* 이미지 업로드 버튼 */}
-                <label className="cursor-pointer bg-gray-200 px-3 py-1 rounded-lg">
-                  📷
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageUpload}
-                  />
-                </label>
-                {/* 전송 버튼 */}
-                <button
-                  className="bg-blue-500 text-white px-4 py-1 rounded-lg"
-                  onClick={generateRecommendations}
-                >
-                  전송
-                </button>
-              </div>
+              </label>
+              {/* 전송 버튼 */}
+              <button
+                className="bg-blue-500 text-white px-4 py-1 rounded-lg"
+                onClick={generateRecommendations}
+              >
+                전송
+              </button>
             </div>
           )}
         </div>
