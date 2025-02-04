@@ -50,16 +50,16 @@ export default function Home() {
       setIsSearching(false);
       setExpanded(false);
       setRecommendations([
-        "/recommendation1.jpg",
-        "/recommendation2.jpg",
-        "/recommendation3.jpg",
+        "/images/image1.jpg",
+        "/images/image2.jpg",
+        "/images/image3.jpg",
       ]);
       setCurrentSlide(0);
     }, 7000);
   };
 
   // 상품 데이터 (기본값)
-  const initialProducts = Array.from({ length: 12 }).map((_, index) => ({
+  const initialProducts = Array.from({ length: 24 }).map((_, index) => ({
     id: index + 1,
     brand: "브랜드 " + (index + 1),
     name: "제품 이름 " + (index + 1),
@@ -68,7 +68,7 @@ export default function Home() {
     hearts: (index + 1) * 10,
     rating: "4.5",
     reviews: 10,
-    image: "/product-image.jpg",
+    image: `/images/image${index + 1}.jpg`,
   }));
 
   const [products, setProducts] = useState(initialProducts);
@@ -426,7 +426,16 @@ export default function Home() {
                   style={{ fontSize: "16px" }}
                 />
                 <label className="cursor-pointer bg-gray-200 px-3 py-1 rounded-lg">
-                  {imagePreview ? "✅" : "📷"}
+                  {imagePreview ? (
+                    <img
+                      src={imagePreview}
+                      alt="미리보기"
+                      style={{ width: 30, height: 30, objectFit: "cover" }}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    "📷"
+                  )}
                   <input
                     type="file"
                     accept="image/*"
